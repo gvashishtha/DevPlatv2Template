@@ -1,0 +1,43 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "The location for the script resource."
+            }
+        },
+        "userAssignedIdentities": {
+            "defaultValue": "/subscriptions/92c76a2f-0e1c-4216-b65e-abf7a3f34c1e/resourceGroups/Inference-PM/providers/Microsoft.ManagedIdentity/userAssignedIdentities/gopalv-aml-identity",
+            "type": "String"
+        }
+    },
+    "functions": [],
+    "variables": {
+        "scriptName": "registerModels"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deploymentScripts",
+            "apiVersion": "2019-10-01-preview",
+            "name": "[variables('scriptName')]",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[parameters('userAssignedIdentities')]": {}
+                }
+            },
+            "kind": "AzureCLI",
+            "properties": {
+                "azCliVersion" : "2.14.0",
+                "scriptContent" : 
+                    "wget aka.ms/bidaf-9-model; mkdir -p models/triton/bidaf-9/1; mv bidaf-9-model models/triton/bidaf-9/1/model.onnx; az extension add -n azure-cli-ml; az ml folder attach -w Inference-PM-AML-Workspace -g Inference-PM; echo 'going to attempt model register'; az ml model register --name 'bidaf-9-arm' --model-path 'models/triton' --model-framework 'Multi'",
+                    "retentionInterval": "P1D"
+            }
+        }
+    ],
+    "outputs": {}
+}
